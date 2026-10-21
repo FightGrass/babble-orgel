@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="옹알이 오르골">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>옹알이 오르골</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column like a phone app, three real steps (담기 → 고르기 → 만들기) above a night-sky player. */
+:root {
+  --bg: #F1F3FA;
+  --surface: #FFFFFF;
+  --ink: #1E2140;
+  --muted: #646A8C;
+  --line: #DADEEE;
+  --moon: #E2A11F;
+  --moon-ink: #2A1E00;
+  --babble: #7462DA;
+  --babble-soft: #E6E2FB;
+  --night: #1B1E3B;
+  --night-ink: #EEF0FA;
+  --night-muted: #8F95BD;
+  --warn: #B4532A;
+  --font-display: "Jua", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101227; --surface: #191C36; --ink: #ECEEFA; --muted: #9AA0C6; --line: #2C3054;
+    --moon: #F2BE52; --moon-ink: #241900; --babble: #A797FF; --babble-soft: #2B2958;
+    --night: #0B0D1E; --night-ink: #EEF0FA; --night-muted: #8389B3; --warn: #F08A5D;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101227; --surface: #191C36; --ink: #ECEEFA; --muted: #9AA0C6; --line: #2C3054;
+  --moon: #F2BE52; --moon-ink: #241900; --babble: #A797FF; --babble-soft: #2B2958;
+  --night: #0B0D1E; --night-ink: #EEF0FA; --night-muted: #8389B3; --warn: #F08A5D;
+  color-scheme: dark;
+}
+
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+  -webkit-text-size-adjust: 100%;
+}
+.app { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+header { display: flex; flex-direction: column; gap: 4px; padding-block: 8px 4px; }
+.eyebrow { margin: 0; font-size: 13px; letter-spacing: 0.06em; color: var(--babble); }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 40px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 6px 0 0; color: var(--muted); font-size: 15px; max-width: 34em; }
+
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.step-head { display: flex; align-items: center; gap: 10px; }
+.num { width: 26px; height: 26px; border-radius: 50%; background: var(--babble-soft); color: var(--babble); display: grid; place-items: center; font-family: var(--font-display); font-size: 15px; flex: none; }
+h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.hint { margin: 0; color: var(--muted); font-size: 14px; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  appearance: none; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  font: inherit; font-size: 15px; padding: 11px 16px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.98); }
+.btn.primary { background: var(--babble); border-color: var(--babble); color: #fff; }
+.btn.recording { background: var(--warn); border-color: var(--warn); color: #fff; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn:focus-visible, .seg input:focus-visible + span, select:focus-visible, input[type=range]:focus-visible, .clip-play:focus-visible, .play:focus-visible, .toggle input:focus-visible + span {
+  outline: 3px solid var(--moon); outline-offset: 2px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+
+.source { display: flex; flex-direction: column; gap: 6px; }
+.source-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
+.source-meta span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mono { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+canvas { display: block; width: 100%; max-width: 100%; }
+#wave { height: 84px; border-radius: 10px; background: var(--bg); }
+
+.note { margin: 0; font-size: 14px; color: var(--muted); background: var(--bg); border-radius: 12px; padding: 10px 12px; }
+.status { margin: 0; font-size: 14px; color: var(--muted); min-height: 1.4em; }
+
+.clips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.clip { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 14px; background: var(--bg); min-width: 0; }
+.clip.off { opacity: 0.5; }
+.clip-play {
+  appearance: none; border: 0; width: 40px; height: 40px; border-radius: 50%; flex: none; cursor: pointer;
+  background: var(--babble-soft); color: var(--babble); display: grid; place-items: center; -webkit-tap-highlight-color: transparent;
+}
+.clip-play.playing { background: var(--babble); color: #fff; }
+.clip-play svg { width: 14px; height: 14px; fill: currentColor; }
+.clip-info { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.3; }
+.clip-info b { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.clip-info .mono { color: var(--muted); }
+.flag { font-size: 12px; color: var(--warn); }
+.toggle { display: inline-flex; align-items: center; cursor: pointer; flex: none; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle span { font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--surface); }
+.toggle input:checked + span { background: var(--babble); border-color: var(--babble); color: #fff; }
+.empty { padding: 14px; text-align: center; color: var(--muted); font-size: 14px; background: var(--bg); border-radius: 14px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 13px; color: var(--muted); letter-spacing: 0.04em; display: flex; justify-content: space-between; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; }
+.seg span {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--bg); cursor: pointer; text-align: center;
+}
+.seg span b { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.seg span small { font-size: 12px; color: var(--muted); }
+.seg input:checked + span { border-color: var(--babble); background: var(--babble-soft); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+select {
+  font: inherit; font-size: 15px; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 12px; min-height: 44px; width: 100%;
+}
+input[type=range] { width: 100%; accent-color: var(--babble); min-height: 44px; }
+
+.player { background: var(--night); color: var(--night-ink); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+#roll { height: 170px; border-radius: 12px; }
+.transport { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.play {
+  appearance: none; border: 0; width: 60px; height: 60px; border-radius: 50%; flex: none; cursor: pointer;
+  background: var(--moon); color: var(--moon-ink); display: grid; place-items: center; box-shadow: 0 0 0 6px color-mix(in srgb, var(--moon) 22%, transparent);
+  -webkit-tap-highlight-color: transparent;
+}
+.play:disabled { opacity: 0.4; cursor: default; }
+.play svg { width: 22px; height: 22px; fill: currentColor; }
+.song { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.song-title { font-family: var(--font-display); font-size: 21px; line-height: 1.2; }
+.song-meta { color: var(--night-muted); }
+.player .btn { background: transparent; color: var(--night-ink); border-color: color-mix(in srgb, var(--night-ink) 25%, transparent); }
+.player-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.player .note { background: color-mix(in srgb, var(--night-ink) 8%, transparent); color: var(--night-muted); }
+
+.foot { margin: 0; text-align: center; font-size: 13px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <p class="eyebrow">생후 <span id="age">87</span>일의 목소리</p>
+    <h1>옹알이 오르골</h1>
+    <p class="lede">아기 옹알이를 한 소리씩 잘라 음정을 맞추고, 오르골 반주 위에 올려 짧은 곡으로 만들어요. 소리는 이 폰 밖으로 나가지 않아요.</p>
+  </header>
+
+  <section class="step" aria-labelledby="h-s1">
+    <div class="step-head"><span class="num">1</span><h2 id="h-s1">소리 담기</h2></div>
+    <div class="actions">
+      <button id="recBtn" class="btn primary" type="button"><span class="dot"></span><span id="recLabel">녹음 시작</span></button>
+      <label class="btn" for="fileIn">녹음 파일 불러오기</label>
+      <input id="fileIn" type="file" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.caf,.mov,.mp4" hidden>
+      <button id="sampleBtn" class="btn" type="button">예시 소리</button>
+    </div>
+    <p class="note" id="micNote" hidden>마이크를 쓸 수 없어요. 아이폰 <b>설정 → Safari → 마이크</b>에서 허용으로 바꾸거나, <b>음성 메모</b> 앱으로 녹음한 파일을 <b>녹음 파일 불러오기</b>로 가져와 주세요.</p>
+    <div class="source">
+      <div class="source-meta"><span id="srcName">예시 소리 (합성한 옹알이)</span><span id="srcDur" class="mono"></span></div>
+      <canvas id="wave" aria-label="녹음 파형과 찾아낸 옹알이 구간"></canvas>
+    </div>
+    <p class="status" id="status" role="status"></p>
+  </section>
+
+  <section class="step" aria-labelledby="h-s2">
+    <div class="step-head"><span class="num">2</span><h2 id="h-s2">소리 고르기</h2></div>
+    <p class="hint" id="clipSummary">조각을 눌러 들어보고, 빼고 싶은 소리는 ‘사용’을 꺼 주세요.</p>
+    <ul id="clips" class="clips"></ul>
+  </section>
+
+  <section class="step" aria-labelledby="h-s3">
+    <div class="step-head"><span class="num">3</span><h2 id="h-s3">곡 만들기</h2></div>
+    <div class="field">
+      <span class="field-label">분위기</span>
+      <div class="seg" role="radiogroup" aria-label="분위기">
+        <label><input type="radio" name="style" id="st-lullaby" value="lullaby" checked><span><b>자장가</b><small>3박 · 느리게</small></span></label>
+        <label><input type="radio" name="style" id="st-play" value="play"><span><b>놀이</b><small>4박 · 통통</small></span></label>
+        <label><input type="radio" name="style" id="st-dream" value="dream"><span><b>꿈나라</b><small>4박 · 둥실</small></span></label>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label class="field-label" for="keySel">조</label>
+        <select id="keySel">
+          <option value="0">다장조 (C)</option>
+          <option value="2">라장조 (D)</option>
+          <option value="5" selected>바장조 (F)</option>
+          <option value="7">사장조 (G)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="corr"><span>음정 보정</span><span class="mono" id="corrVal">85%</span></label>
+        <input id="corr" type="range" min="0" max="100" step="5" value="85">
+      </div>
+    </div>
+  </section>
+
+  <section class="player" aria-label="만든 곡">
+    <canvas id="roll" aria-label="곡 악보 그림: 보라색은 옹알이, 점은 오르골 반주"></canvas>
+    <div class="transport">
+      <button id="playBtn" class="play" type="button" aria-label="재생" disabled>
+        <svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg>
+      </button>
+      <div class="song">
+        <span class="song-title" id="songTitle">곡을 만드는 중</span>
+        <span class="song-meta mono" id="songMeta"></span>
+      </div>
+    </div>
+    <div class="player-actions">
+      <button id="shuffleBtn" class="btn" type="button">다르게 만들기</button>
+      <button id="saveBtn" class="btn" type="button" hidden>파일로 저장</button>
+    </div>
+    <p class="note" id="saveNote" hidden></p>
+  </section>
+
+  <p class="foot">소리가 안 들리면 아이폰 옆면의 무음 스위치를 확인해 주세요.</p>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const SR = 44100;
+  const NOTE_KO = ["도", "도#", "레", "레#", "미", "파", "파#", "솔", "솔#", "라", "라#", "시"];
+  const KEY_NAMES = { 0: "다장조", 2: "라장조", 5: "바장조", 7: "사장조" };
+  const MAJ = [0, 2, 4, 5, 7, 9, 11];
+  const ICON_PLAY = '<path d="M7 4.5v15l13-7.5z"/>';
+  const ICON_STOP = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
+
+  const state = {
+    source: null, srcName: "", clips: [], seed: 727,
+    song: null, rendered: null,
+    playing: null, previewing: null,
+    recordedBlob: null, recordedExt: "", downloads: null,
+  };
+
+  // ---------- age ----------
+  (function () {
+    const n = new Date();
+    const d = Math.floor((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) - Date.UTC(2026, 6, 27)) / 86400000) + 1;
+    $("#age").textContent = d > 0 ? d : 1;
+  })();
+
+  // ---------- helpers ----------
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const ftom = (f) => 69 + 12 * Math.log2(f / 440);
+  const noteName = (m) => { const r = Math.round(m); return NOTE_KO[((r % 12) + 12) % 12] + (Math.floor(r / 12) - 1); };
+  const fmtTime = (s) => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  const setStatus = (t) => { $("#status").textContent = t || ""; };
+  const tok = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  let actx = null;
+  function getCtx() {
+    if (!actx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      actx = new AC();
+    }
+    if (actx.state === "suspended") actx.resume();
+    return actx;
+  }
+  function makeOffline(ch, len, sr) {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    return new OAC(ch, len, sr);
+  }
+  function decode(arrayBuf) {
+    const ctx = makeOffline(1, 1, SR);
+    return new Promise((res, rej) => {
+      try {
+        const p = ctx.decodeAudioData(arrayBuf, res, rej);
+        if (p && p.then) p.then(res, rej);
+      } catch (e) { rej(e); }
+    });
+  }
+  function renderOffline(ctx) {
+    return new Promise((res, rej) => {
+      ctx.oncomplete = (e) => res(e.renderedBuffer);
+      try {
+        const p = ctx.startRendering();
+        if (p && p.then) p.then(res, rej);
+      } catch (e) { rej(e); }
+    });
+  }
+
+  // ---------- example babble (synthesized, clearly labelled) ----------
+  function synthBabble() {
+    const r = rng(727);
+    const coos = [
+      [420, 520, 0.55, "a"], [500, 380, 0.7, "u"], [360, 470, 0.45, "a"], [560, 600, 0.35, "o"],
+      [450, 330, 0.9, "a"], [380, 430, 0.5, "u"], [600, 480, 0.6, "o"], [400, 520, 0.42, "a"],
+    ];
+    const F = { a: [1100, 1700, 3300], u: [500, 1100, 3000], o: [650, 1150, 3100] };
+    const gaps = coos.map(() => 0.35 + r() * 0.45);
+    let total = 0.4;
+    coos.forEach((c, i) => (total += c[2] + gaps[i]));
+    const out = new Float32Array(Math.ceil((total + 0.5) * SR));
+    let t = 0.4;
+    coos.forEach(([fa, fb, dur, v], ci) => {
+      const n = Math.floor(dur * SR), start = Math.floor(t * SR), fm = F[v];
+      let phase = 0;
+      const amps = [];
+      for (let i = 0; i < n; i++) {
+        const x = i / n;
+        const glide = x < 0.5 ? 2 * x * x : 1 - 2 * (1 - x) * (1 - x);
+        const f0 = fa + (fb - fa) * glide + 7 * Math.sin(2 * Math.PI * 5.2 * i / SR);
+        phase += 2 * Math.PI * f0 / SR;
+        let s = 0;
+        for (let h = 1; h <= 14; h++) {
+          const hf = h * f0;
+          if (hf > 8000) break;
+          let a = 0.06 / h;
+          for (let k = 0; k < 3; k++) {
+            const bw = [140, 190, 260][k];
+            a += [1, 0.55, 0.22][k] * Math.exp(-((hf - fm[k]) * (hf - fm[k])) / (2 * bw * bw));
+          }
+          s += a * Math.sin(h * phase);
+        }
+        const env = Math.min(1, i / (0.07 * SR)) * Math.min(1, (n - i) / (0.16 * SR));
+        out[start + i] += 0.3 * s * env;
+      }
+      t += dur + gaps[ci];
+    });
+    let peak = 0;
+    for (let i = 0; i < out.length; i++) peak = Math.max(peak, Math.abs(out[i]));
+    for (let i = 0; i < out.length; i++) out[i] = out[i] / (peak || 1) * 0.8 + (r() * 2 - 1) * 0.004;
+    return out;
+  }
+
+  // ---------- analysis ----------
+  function segment(x, sr) {
+    const hop = 512, win = 1024;
+    const nF = Math.max(0, Math.floor((x.length - win) / hop) + 1);
+    const rms = new Float32Array(nF);
+    for (let f = 0; f < nF; f++) {
+      let s = 0;
+      const o = f * hop;
+      for (let j = 0; j < win; j++) s += x[o + j] * x[o + j];
+      rms[f] = Math.sqrt(s / win);
+    }
+    const sorted = Array.from(rms).sort((a, b) => a - b);
+    const noise = sorted[Math.floor(nF * 0.2)] || 0;
+    const top = sorted[Math.floor(nF * 0.98)] || 0;
+    const thr = Math.max(noise * 3.5, top * 0.12, 0.004);
+    let segs = [], on = false, s0 = 0;
+    for (let i = 0; i < nF; i++) {
+      if (rms[i] > thr) { if (!on) { on = true; s0 = i; } }
+      else if (on) { on = false; segs.push([s0, i]); }
+    }
+    if (on) segs.push([s0, nF]);
+    const gapF = Math.round(0.12 * sr / hop);
+    const merged = [];
+    for (const s of segs) {
+      const last = merged[merged.length - 1];
+      if (last && s[0] - last[1] <= gapF) last[1] = s[1];
+      else merged.push(s.slice());
+    }
+    const pad = Math.round(0.03 * sr);
+    const out = [];
+    for (const [a, b] of merged) {
+      let st = Math.max(0, a * hop - pad), en = Math.min(x.length, b * hop + win + pad);
+      if ((en - st) / sr < 0.15) continue;
+      const maxLen = Math.round(2.5 * sr);
+      while (en - st > maxLen) { out.push([st, st + maxLen]); st += maxLen; }
+      if ((en - st) / sr >= 0.15) out.push([st, en]);
+    }
+    return out;
+  }
+
+  function yin(x, off, W, sr) {
+    const maxLag = Math.min(Math.floor(sr / 140), W - 1);
+    const minLag = Math.floor(sr / 1100);
+    if (off + W + maxLag > x.length) return null;
+    const d = new Float32Array(maxLag + 1);
+    for (let tau = 1; tau <= maxLag; tau++) {
+      let s = 0;
+      for (let j = 0; j < W; j++) { const dd = x[off + j] - x[off + j + tau]; s += dd * dd; }
+      d[tau] = s;
+    }
+    const c = new Float32Array(maxLag + 1);
+    c[0] = 1;
+    let run = 0;
+    for (let tau = 1; tau <= maxLag; tau++) { run += d[tau]; c[tau] = run ? d[tau] * tau / run : 1; }
+    let tau = -1;
+    for (let t = minLag; t <= maxLag; t++) {
+      if (c[t] < 0.18) { while (t + 1 <= maxLag && c[t + 1] < c[t]) t++; tau = t; break; }
+    }
+    if (tau < 0) return null;
+    let better = tau;
+    if (tau > 1 && tau < maxLag) {
+      const a = c[tau - 1], b = c[tau], cc = c[tau + 1];
+      const den = a + cc - 2 * b;
+      if (den) better = tau + (a - cc) / (2 * den);
+    }
+    return sr / better;
+  }
+
+  function buildClips(x, sr, segs) {
+    let clips = segs.map(([st, en], i) => {
+      const len = en - st, W = 1024;
+      const frames = Math.min(14, Math.max(1, Math.floor((len - 2048) / 512)));
+      const pitches = [];
+      for (let k = 0; k < frames; k++) {
+        const off = st + Math.floor((len - 2048) * (k + 0.5) / frames);
+        const f = off >= st ? yin(x, off, W, sr) : null;
+        if (f) pitches.push(f);
+      }
+      let sq = 0, pk = 0;
+      for (let j = st; j < en; j++) { sq += x[j] * x[j]; pk = Math.max(pk, Math.abs(x[j])); }
+      const loud = Math.sqrt(sq / len);
+      pitches.sort((a, b) => a - b);
+      const hz = pitches.length ? pitches[Math.floor(pitches.length / 2)] : 0;
+      const voiced = pitches.length / frames;
+      const buf = new Float32Array(len);
+      const fade = Math.min(Math.floor(0.012 * sr), Math.floor(len / 4));
+      const g = pk ? 0.9 / pk : 1;
+      for (let j = 0; j < len; j++) {
+        let e = 1;
+        if (j < fade) e = j / fade; else if (j > len - fade) e = (len - j) / fade;
+        buf[j] = x[st + j] * g * e;
+      }
+      return { id: i, start: st / sr, end: en / sr, dur: len / sr, hz, midi: hz ? ftom(hz) : 0, voiced, loud, buf, include: true, flag: "" };
+    });
+    const maxLoud = Math.max(0, ...clips.map((c) => c.loud));
+    clips.forEach((c) => {
+      if (c.voiced < 0.35 || !c.hz) { c.flag = "음 높이가 잘 안 잡혀요"; c.include = false; }
+      else if (c.dur > 1.6 && c.loud > 0.7 * maxLoud) { c.flag = "울음일 수도 있어요"; c.include = false; }
+    });
+    if (clips.length > 24) {
+      const keep = clips.slice().sort((a, b) => (b.voiced * b.loud) - (a.voiced * a.loud)).slice(0, 24);
+      clips = clips.filter((c) => keep.includes(c));
+    }
+    clips.forEach((c, i) => (c.id = i));
+    return clips;
+  }
+
+  // ---------- drawing: source waveform ----------
+  function sizeCanvas(cv) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, cv.clientWidth), h = Math.max(1, cv.clientHeight);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    const g = cv.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { g, w, h };
+  }
+
+  function drawWave() {
+    const cv = $("#wave");
+    const { g, w, h } = sizeCanvas(cv);
+    g.clearRect(0, 0, w, h);
+    const x = state.source;
+    if (!x) return;
+    const dur = x.length / SR;
+    const babble = tok("--babble"), soft = tok("--babble-soft"), muted = tok("--muted");
+    state.clips.forEach((c) => {
+      const x0 = c.start / dur * w, x1 = c.end / dur * w;
+      g.fillStyle = soft;
+      g.fillRect(x0, 0, Math.max(2, x1 - x0), h);
+      if (c.include) { g.fillStyle = babble; g.fillRect(x0, h - 4, Math.max(2, x1 - x0), 4); }
+      if (state.previewing && state.previewing.id === c.id) {
+        g.strokeStyle = babble; g.lineWidth = 2; g.strokeRect(x0 + 1, 1, Math.max(2, x1 - x0) - 2, h - 2);
+      }
+    });
+    const step = x.length / w;
+    g.fillStyle = muted;
+    for (let px = 0; px < w; px++) {
+      let mn = 1, mx = -1;
+      const a = Math.floor(px * step), b = Math.min(x.length, Math.floor((px + 1) * step));
+      const inc = Math.max(1, Math.floor((b - a) / 64));
+      for (let j = a; j < b; j += inc) { const v = x[j]; if (v < mn) mn = v; if (v > mx) mx = v; }
+      if (mx < mn) continue;
+      const y0 = h / 2 - mx * h * 0.45, y1 = h / 2 - mn * h * 0.45;
+      g.fillRect(px, y0, 1, Math.max(1, y1 - y0));
+    }
+  }
+
+  // ---------- clip list ----------
+  function renderClips() {
+    const ul = $("#clips");
+    ul.innerHTML = "";
+    const used = state.clips.filter((c) => c.include).length;
+    if (!state.clips.length) {
+      $("#clipSummary").textContent = "옹알이를 찾지 못했어요. 조용한 곳에서 아기 입 가까이 폰을 대고 다시 녹음해 보세요.";
+      const li = document.createElement("li");
+      li.className = "empty"; li.textContent = "찾은 소리가 여기에 나타나요";
+      ul.appendChild(li);
+      return;
+    }
+    $("#clipSummary").textContent = `옹알이 ${state.clips.length}개를 찾았어요. 지금 ${used}개를 곡에 쓰고 있어요. 조각을 눌러 들어보세요.`;
+    state.clips.forEach((c) => {
+      const li = document.createElement("li");
+      li.className = "clip" + (c.include ? "" : " off");
+      const play = document.createElement("button");
+      play.type = "button"; play.className = "clip-play";
+      play.setAttribute("aria-label", `${c.id + 1}번 소리 듣기`);
+      play.innerHTML = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
+      play.addEventListener("click", () => previewClip(c, play));
+      const info = document.createElement("div");
+      info.className = "clip-info";
+      const b = document.createElement("b");
+      b.textContent = c.hz ? noteName(c.midi) : "음 없음";
+      const meta = document.createElement("span");
+      meta.className = "mono";
+      meta.textContent = (c.hz ? Math.round(c.hz) + " Hz · " : "") + c.dur.toFixed(1) + "초";
+      info.append(b, meta);
+      if (c.flag) { const f = document.createElement("span"); f.className = "flag"; f.textContent = c.flag; info.appendChild(f); }
+      const lab = document.createElement("label");
+      lab.className = "toggle";
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = c.include; cb.id = "clip-use-" + c.id;
+      cb.disabled = !c.hz;
+      cb.addEventListener("change", () => {
+        c.include = cb.checked;
+        li.classList.toggle("off", !c.include);
+        $("#clipSummary").textContent = `옹알이 ${state.clips.length}개를 찾았어요. 지금 ${state.clips.filter((k) => k.include).length}개를 곡에 쓰고 있어요. 조각을 눌러 들어보세요.`;
+        drawWave();
+        compose();
+      });
+      const sp = document.createElement("span"); sp.textContent = "사용";
+      lab.append(cb, sp);
+      li.append(play, info, lab);
+      ul.appendChild(li);
+    });
+  }
+
+  function previewClip(c, btn) {
+    const ctx = getCtx();
+    stopPreview();
+    stopSong();
+    const ab = ctx.createBuffer(1, c.buf.length, SR);
+    ab.getChannelData(0).set(c.buf);
+    const src = ctx.createBufferSource();
+    src.buffer = ab; src.connect(ctx.destination); src.start();
+    btn.classList.add("playing");
+    state.previewing = { id: c.id, src, btn };
+    src.onended = () => { if (state.previewing && state.previewing.src === src) stopPreview(); };
+    drawWave();
+  }
+  function stopPreview() {
+    const p = state.previewing;
+    if (!p) return;
+    state.previewing = null;
+    try { p.src.onended = null; p.src.stop(); } catch (e) {}
+    p.btn.classList.remove("playing");
+    drawWave();
+  }
+
+  // ---------- composition ----------
+  const STYLES = {
+    lullaby: { name: "자장가", bpm: 80, beats: 3, prog: [0, 5, 0, 7, 9, 5, 7, 0],
+      rhythm: [[0], [0, 2], [0, 1], [0, 1.5]], box: "waltz", pad: true, drums: false, bass: [0] },
+    play: { name: "놀이", bpm: 108, beats: 4, prog: [0, 7, 9, 5, 0, 7, 5, 7],
+      rhythm: [[0, 1, 2, 3], [0, 1.5, 2.5], [0, 2, 3], [0, 0.5, 1, 2]], box: "eighth", pad: false, drums: true, bass: [0, 2] },
+    dream: { name: "꿈나라", bpm: 66, beats: 4, prog: [0, 4, 5, 0, 9, 5, 2, 7],
+      rhythm: [[0], [0, 2], [0, 2.5], [0, 3]], box: "sparse", pad: true, drums: false, bass: [0] },
+  };
+  function triad(root) {
+    const idx = MAJ.indexOf(root);
+    return [0, 2, 4].map((k) => {
+      const i = idx + k;
+      return MAJ[i % 7] + 12 * Math.floor(i / 7);
+    });
+  }
+
+  function plan() {
+    const styleKey = document.querySelector('input[name="style"]:checked').value;
+    const st = STYLES[styleKey];
+    const key = parseInt($("#keySel").value, 10);
+    const corr = parseInt($("#corr").value, 10) / 100;
+    const r = rng(state.seed);
+    const spb = 60 / st.bpm, bar = spb * st.beats;
+    const bars = [];
+    bars.push({ chord: st.prog[0], part: "intro" }, { chord: st.prog[1], part: "intro" });
+    st.prog.forEach((c) => bars.push({ chord: c, part: "melody" }));
+    bars.push({ chord: 5, part: "outro" }, { chord: 0, part: "end" });
+    const active = state.clips.filter((c) => c.include && c.hz);
+    const babble = [], box = [], pad = [], bass = [], drums = [];
+    let lastClip = -1;
+
+    bars.forEach((b, bi) => {
+      const t0 = bi * bar;
+      const tones = triad(b.chord);
+      // music box accompaniment
+      if (b.part === "end") {
+        tones.concat([12]).forEach((tn, k) => box.push({ t: t0 + k * spb * 0.5, m: 72 + key + tn, g: 0.16 }));
+      } else if (st.box === "waltz") {
+        box.push({ t: t0, m: 60 + key + tones[0], g: 0.14 });
+        box.push({ t: t0 + spb, m: 72 + key + tones[1], g: 0.1 });
+        box.push({ t: t0 + 2 * spb, m: 72 + key + tones[2], g: 0.1 });
+      } else if (st.box === "eighth") {
+        [0, 1, 2, 1, 0, 1, 2, 1].forEach((k, i) => box.push({ t: t0 + i * spb / 2, m: 72 + key + tones[k], g: i % 2 ? 0.06 : 0.09 }));
+      } else {
+        box.push({ t: t0, m: 84 + key + tones[2], g: 0.08 });
+        box.push({ t: t0 + 2.5 * spb, m: 84 + key + tones[r() < 0.5 ? 0 : 1], g: 0.06 });
+      }
+      if (st.pad || b.part === "end") pad.push({ t: t0, d: bar * (b.part === "end" ? 2 : 1), ms: tones.map((tn) => 60 + key + tn) });
+      st.bass.forEach((bt) => bass.push({ t: t0 + bt * spb, m: 48 + key + tones[0], d: spb * (st.bass.length > 1 ? 1.6 : st.beats * 0.9) }));
+      if (st.drums && b.part !== "end") {
+        for (let k = 0; k < st.beats; k++) {
+          if (k % 2 === 0) drums.push({ t: t0 + k * spb, kind: "kick" });
+          drums.push({ t: t0 + (k + 0.5) * spb, kind: "shaker" });
+        }
+      }
+      // babble melody
+      if (!active.length) return;
+      let onsets = null;
+      if (b.part === "melody") {
+        const mi = bi - 2;
+        onsets = mi === 7 ? [0] : st.rhythm[Math.floor(r() * st.rhythm.length)];
+        if (mi === 3) onsets = [0, st.beats - 1].filter((v, i, a) => a.indexOf(v) === i);
+      } else if (b.part === "outro") {
+        onsets = [0];
+      }
+      if (!onsets) return;
+      onsets.forEach((ob, oi) => {
+        let pick;
+        if (active.length === 1) pick = active[0];
+        else { do { pick = active[Math.floor(r() * active.length)]; } while (pick.id === lastClip); }
+        lastClip = pick.id;
+        const final = b.part === "outro" || (b.part === "melody" && bi - 2 === 7);
+        const pool = final ? [0] : tones;
+        const cands = [];
+        for (let o = 3; o <= 7; o++) pool.forEach((tn) => cands.push(12 * o + key + tn));
+        cands.sort((a, c) => Math.abs(a - pick.midi) - Math.abs(c - pick.midi));
+        const target = (!final && r() < 0.3 && cands[1] !== undefined) ? cands[1] : cands[0];
+        let shift = (target - pick.midi) * corr;
+        shift = Math.max(-12, Math.min(12, shift));
+        const rate = Math.pow(2, shift / 12);
+        const t = t0 + ob * spb;
+        const next = oi + 1 < onsets.length ? t0 + onsets[oi + 1] * spb : t0 + bar;
+        const natural = pick.dur / rate;
+        const maxLen = final ? natural : Math.max(spb * 0.6, next - t + spb * 0.35);
+        const dur = Math.min(natural, maxLen);
+        babble.push({ t, clip: pick, rate, dur, m: pick.midi + shift, target });
+        if (st.box !== "eighth") box.push({ t, m: target + 12 * Math.round((76 - target) / 12), g: 0.05, echo: true });
+      });
+    });
+    const length = bars.length * bar + 3.2;
+    return { st, styleKey, key, corr, spb, bar, bars: bars.length, babble, box, pad, bass, drums, length, used: active.length };
+  }
+
+  function makeImpulse(ctx, secs) {
+    const len = Math.floor(secs * ctx.sampleRate);
+    const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    const r = rng(99);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (r() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+    }
+    return ir;
+  }
+
+  async function renderSong(p) {
+    const ctx = makeOffline(2, Math.ceil(p.length * SR), SR);
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.25;
+    const master = ctx.createGain(); master.gain.value = 0.95;
+    comp.connect(master).connect(ctx.destination);
+    const dry = ctx.createGain(); dry.gain.value = 1; dry.connect(comp);
+    const verb = ctx.createConvolver(); verb.buffer = makeImpulse(ctx, 2.4);
+    const wet = ctx.createGain(); wet.gain.value = p.styleKey === "play" ? 0.18 : 0.32;
+    verb.connect(wet).connect(comp);
+    const send = (node, amt) => { node.connect(dry); const s = ctx.createGain(); s.gain.value = amt; node.connect(s).connect(verb); };
+
+    // music box
+    p.box.forEach(({ t, m, g }) => {
+      const f = mtof(m);
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+      const o2 = ctx.createOscillator(); o2.type = "sine"; o2.frequency.value = f * 4.07;
+      const g2 = ctx.createGain(); g2.gain.value = 0.16;
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(g, t + 0.004);
+      env.gain.exponentialRampToValueAtTime(0.0006, t + 1.8);
+      o.connect(env); o2.connect(g2).connect(env);
+      send(env, 0.6);
+      o.start(t); o2.start(t); o.stop(t + 1.85); o2.stop(t + 1.85);
+    });
+    // pad
+    p.pad.forEach(({ t, d, ms }) => {
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900; lp.Q.value = 0.3;
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.035, t + Math.min(0.6, d * 0.3));
+      env.gain.setValueAtTime(0.035, t + d * 0.85);
+      env.gain.linearRampToValueAtTime(0, t + d + 0.4);
+      lp.connect(env); send(env, 0.8);
+      ms.forEach((m) => [-6, 6].forEach((cents) => {
+        const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = mtof(m); o.detune.value = cents;
+        o.connect(lp); o.start(t); o.stop(t + d + 0.5);
+      }));
+    });
+    // bass
+    p.bass.forEach(({ t, m, d }) => {
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = mtof(m);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.16, t + 0.02);
+      env.gain.exponentialRampToValueAtTime(0.001, t + d);
+      o.connect(env); send(env, 0.1);
+      o.start(t); o.stop(t + d + 0.05);
+    });
+    // drums
+    if (p.drums.length) {
+      const nb = ctx.createBuffer(1, Math.floor(0.08 * SR), SR);
+      const nr = rng(5), nd = nb.getChannelData(0);
+      for (let i = 0; i < nd.length; i++) nd[i] = nr() * 2 - 1;
+      p.drums.forEach(({ t, kind }) => {
+        if (kind === "kick") {
+          const o = ctx.createOscillator(); o.type = "sine";
+          o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.14);
+          const env = ctx.createGain();
+          env.gain.setValueAtTime(0.32, t); env.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+          o.connect(env).connect(dry); o.start(t); o.stop(t + 0.25);
+        } else {
+          const s = ctx.createBufferSource(); s.buffer = nb;
+          const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 6500;
+          const env = ctx.createGain();
+          env.gain.setValueAtTime(0.05, t); env.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+          s.connect(hp).connect(env).connect(dry); s.start(t);
+        }
+      });
+    }
+    // babble
+    const bufCache = new Map();
+    const r = rng(state.seed + 1);
+    p.babble.forEach(({ t, clip, rate, dur }) => {
+      let ab = bufCache.get(clip.id);
+      if (!ab) { ab = ctx.createBuffer(1, clip.buf.length, SR); ab.getChannelData(0).set(clip.buf); bufCache.set(clip.id, ab); }
+      const s = ctx.createBufferSource(); s.buffer = ab; s.playbackRate.value = rate;
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.62, t);
+      env.gain.setValueAtTime(0.62, t + Math.max(0.01, dur - 0.08));
+      env.gain.linearRampToValueAtTime(0, t + dur);
+      let node = s.connect(env);
+      if (ctx.createStereoPanner) {
+        const pn = ctx.createStereoPanner(); pn.pan.value = (r() - 0.5) * 0.4;
+        node = env.connect(pn);
+      }
+      send(node, 0.45);
+      s.start(t); s.stop(t + dur + 0.02);
+    });
+    return renderOffline(ctx);
+  }
+
+  let composeToken = 0;
+  async function compose() {
+    const my = ++composeToken;
+    stopSong();
+    state.recordedBlob = null;
+    $("#playBtn").disabled = true;
+    $("#songTitle").textContent = "곡을 만드는 중";
+    if (!state.clips.some((c) => c.include && c.hz)) {
+      state.song = null; state.rendered = null;
+      $("#songTitle").textContent = "쓸 소리를 골라 주세요";
+      $("#songMeta").textContent = "2번에서 ‘사용’을 하나 이상 켜면 곡이 만들어져요";
+      drawRoll(0);
+      return;
+    }
+    const p = plan();
+    try {
+      const buf = await renderSong(p);
+      if (my !== composeToken) return;
+      state.song = p; state.rendered = buf;
+      $("#songTitle").textContent = `${p.st.name} · ${KEY_NAMES[p.key]}`;
+      $("#songMeta").textContent = `${p.st.bpm} BPM · ${p.st.beats}/4박 · ${fmtTime(p.length)} · 옹알이 ${p.babble.length}번`;
+      $("#playBtn").disabled = false;
+      drawRoll(0);
+    } catch (e) {
+      if (my !== composeToken) return;
+      $("#songTitle").textContent = "곡을 만들지 못했어요";
+      $("#songMeta").textContent = "다르게 만들기를 눌러 다시 시도해 주세요";
+    }
+  }
+
+  // ---------- drawing: song roll ----------
+  function drawRoll(pos) {
+    const cv = $("#roll");
+    const { g, w, h } = sizeCanvas(cv);
+    const night = tok("--night"), ink = tok("--night-ink"), muted = tok("--night-muted");
+    const babble = tok("--babble"), moon = tok("--moon");
+    g.fillStyle = night; g.fillRect(0, 0, w, h);
+    const p = state.song;
+    if (!p) {
+      g.fillStyle = muted; g.font = '14px "Gowun Dodum", sans-serif'; g.textAlign = "center";
+      g.fillText("곡이 여기에 그려져요", w / 2, h / 2);
+      return;
+    }
+    const total = p.bars * p.bar;
+    const X = (t) => 6 + (t / total) * (w - 12);
+    const lo = 52, hi = 96;
+    const Y = (m) => h - 16 - ((Math.max(lo, Math.min(hi, m)) - lo) / (hi - lo)) * (h - 30);
+    g.globalAlpha = 0.18; g.fillStyle = ink;
+    for (let b = 0; b <= p.bars; b++) g.fillRect(Math.round(X(b * p.bar)), 6, 1, h - 20);
+    g.globalAlpha = 1;
+    g.fillStyle = muted; g.font = '10px "IBM Plex Mono", monospace'; g.textAlign = "left";
+    for (let b = 0; b < p.bars; b += 2) g.fillText(String(b + 1), X(b * p.bar) + 3, h - 3);
+    p.box.forEach(({ t, m, echo }) => {
+      if (echo) return;
+      g.globalAlpha = t <= pos ? 0.9 : 0.45;
+      g.fillStyle = moon;
+      g.beginPath(); g.arc(X(t), Y(m), 2, 0, Math.PI * 2); g.fill();
+    });
+    p.babble.forEach(({ t, dur, target }) => {
+      const x0 = X(t), x1 = Math.max(x0 + 6, X(t + dur)), y = Y(target);
+      g.globalAlpha = t <= pos ? 1 : 0.6;
+      g.fillStyle = babble;
+      const rr = 5;
+      g.beginPath();
+      if (g.roundRect) g.roundRect(x0, y - rr, x1 - x0, rr * 2, rr); else g.rect(x0, y - rr, x1 - x0, rr * 2);
+      g.fill();
+    });
+    g.globalAlpha = 1;
+    if (pos > 0) {
+      g.fillStyle = moon;
+      g.fillRect(Math.round(X(Math.min(pos, total))) - 1, 4, 2, h - 18);
+    }
+  }
+
+  // ---------- playback + capture for saving ----------
+  let recDest = null;
+  function setPlayIcon(on) {
+    $("#playIcon").innerHTML = on ? ICON_STOP : ICON_PLAY;
+    $("#playBtn").setAttribute("aria-label", on ? "멈추기" : "재생");
+  }
+  function playSong() {
+    if (!state.rendered) return;
+    const ctx = getCtx();
+    stopPreview(); stopSong();
+    const src = ctx.createBufferSource();
+    src.buffer = state.rendered;
+    src.connect(ctx.destination);
+    let rec = null, chunks = [];
+    if (window.MediaRecorder && ctx.createMediaStreamDestination) {
+      try {
+        if (!recDest) recDest = ctx.createMediaStreamDestination();
+        src.connect(recDest);
+        rec = new MediaRecorder(recDest.stream);
+        rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+        rec.start();
+      } catch (e) { rec = null; }
+    }
+    const t0 = ctx.currentTime + 0.05;
+    src.start(t0);
+    const play = { src, t0, rec, chunks, done: false, raf: 0 };
+    state.playing = play;
+    setPlayIcon(true);
+    const tick = () => {
+      if (state.playing !== play) return;
+      drawRoll(Math.max(0, ctx.currentTime - t0));
+      play.raf = requestAnimationFrame(tick);
+    };
+    tick();
+    src.onended = () => {
+      if (state.playing !== play) return;
+      play.done = true;
+      finishPlay(play, true);
+    };
+  }
+  function finishPlay(play, completed) {
+    cancelAnimationFrame(play.raf);
+    state.playing = null;
+    setPlayIcon(false);
+    drawRoll(0);
+    if (play.rec && play.rec.state !== "inactive") {
+      const rec = play.rec;
+      rec.onstop = () => {
+        if (!completed || !play.chunks.length) return;
+        const type = rec.mimeType || (play.chunks[0] && play.chunks[0].type) || "";
+        state.recordedBlob = new Blob(play.chunks, { type });
+        state.recordedExt = /mp4|aac|m4a/.test(type) ? "mp4" : "webm";
+        showSaveNote("저장할 준비가 됐어요. ‘파일로 저장’을 눌러 주세요.");
+      };
+      try { rec.stop(); } catch (e) {}
+    }
+  }
+  function stopSong() {
+    const p = state.playing;
+    if (!p) return;
+    try { p.src.onended = null; p.src.stop(); } catch (e) {}
+    finishPlay(p, false);
+  }
+  function showSaveNote(t) { const n = $("#saveNote"); n.textContent = t; n.hidden = !t; }
+
+  async function saveSong() {
+    if (!state.recordedBlob) {
+      showSaveNote("곡을 처음부터 끝까지 한 번 재생하면 저장할 파일이 만들어져요.");
+      return;
+    }
+    const n = new Date();
+    const date = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+    const name = `옹알이-생후${$("#age").textContent}일-${state.song.st.name}-${date}.${state.recordedExt}`;
+    const type = state.recordedExt === "mp4" ? "audio/mp4" : "audio/webm";
+    // iPhone: the share sheet offers "파일에 저장" and 메시지/카톡 등
+    try {
+      const file = new File([state.recordedBlob], name, { type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "옹알이 오르골" });
+        showSaveNote("");
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+    }
+    try {
+      const url = URL.createObjectURL(state.recordedBlob);
+      const a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      showSaveNote("저장했어요.");
+    } catch (e) {
+      showSaveNote("이 브라우저에서는 저장할 수 없어요.");
+    }
+  }
+
+  // ---------- loading sources ----------
+  function loadSamples(x, name) {
+    stopPreview(); stopSong();
+    const maxLen = 180 * SR;
+    if (x.length > maxLen) x = x.slice(0, maxLen);
+    state.source = x;
+    state.srcName = name;
+    $("#srcName").textContent = name;
+    $("#srcDur").textContent = fmtTime(x.length / SR);
+    setStatus("옹알이를 찾는 중…");
+    setTimeout(() => {
+      const segs = segment(x, SR);
+      state.clips = buildClips(x, SR, segs);
+      state.seed = 727 + Math.floor(x.length % 1000);
+      renderClips();
+      drawWave();
+      const n = state.clips.length;
+      setStatus(n ? `소리 ${n}조각을 찾았어요.` : "옹알이를 찾지 못했어요.");
+      compose();
+    }, 20);
+  }
+
+  function mixToMono(ab) {
+    if (ab.numberOfChannels === 1) return ab.getChannelData(0).slice();
+    const a = ab.getChannelData(0), b = ab.getChannelData(1);
+    const out = new Float32Array(a.length);
+    for (let i = 0; i < a.length; i++) out[i] = (a[i] + b[i]) * 0.5;
+    return out;
+  }
+
+  async function loadBlob(blob, name) {
+    setStatus("녹음을 여는 중…");
+    try {
+      const buf = await blob.arrayBuffer();
+      const ab = await decode(buf);
+      loadSamples(mixToMono(ab), name);
+    } catch (e) {
+      setStatus("이 파일은 열 수 없어요. 음성 메모(.m4a)나 .mp3, .wav 파일로 다시 시도해 주세요.");
+    }
+  }
+
+  $("#fileIn").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) loadBlob(f, f.name);
+    e.target.value = "";
+  });
+  $("#sampleBtn").addEventListener("click", () => loadSamples(synthBabble(), "예시 소리 (합성한 옹알이)"));
+
+  // mic recording, used only where this view allows it
+  let micRec = null, micTimer = 0;
+  $("#recBtn").addEventListener("click", async () => {
+    if (micRec) { micRec.stop(); return; }
+    getCtx();
+    let stream;
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) throw new Error("no mic");
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+    } catch (e) {
+      $("#micNote").hidden = false;
+      return;
+    }
+    const chunks = [];
+    const rec = new MediaRecorder(stream);
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    const started = Date.now();
+    rec.onstop = () => {
+      clearInterval(micTimer);
+      stream.getTracks().forEach((t) => t.stop());
+      micRec = null;
+      $("#recBtn").classList.remove("recording");
+      $("#recLabel").textContent = "녹음 시작";
+      if (chunks.length) loadBlob(new Blob(chunks, { type: rec.mimeType || chunks[0].type }), "방금 녹음한 소리");
+    };
+    rec.start();
+    micRec = rec;
+    $("#recBtn").classList.add("recording");
+    const upd = () => { $("#recLabel").textContent = "멈추기 " + fmtTime((Date.now() - started) / 1000); };
+    upd();
+    micTimer = setInterval(upd, 500);
+  });
+
+  // ---------- controls ----------
+  document.querySelectorAll('input[name="style"]').forEach((el) => el.addEventListener("change", compose));
+  $("#keySel").addEventListener("change", compose);
+  $("#corr").addEventListener("input", () => { $("#corrVal").textContent = $("#corr").value + "%"; });
+  $("#corr").addEventListener("change", compose);
+  $("#shuffleBtn").addEventListener("click", () => { state.seed = (state.seed * 1103515245 + 12345) >>> 0; compose(); });
+  $("#playBtn").addEventListener("click", () => { if (state.playing) stopSong(); else playSong(); });
+  $("#saveBtn").addEventListener("click", saveSong);
+
+  const redraw = () => { drawWave(); drawRoll(0); };
+  window.addEventListener("resize", redraw);
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw); } catch (e) {}
+  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  // saving needs MediaRecorder (iOS 14.5+)
+  if (window.MediaRecorder) $("#saveBtn").hidden = false;
+
+  // start in a working state with the labelled example
+  loadSamples(synthBabble(), "예시 소리 (합성한 옹알이)");
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+})();
+</script>
+</body>
+</html>
